@@ -3,29 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Palimpsest | Resilient Archive</title>
+    <title>Palimpsest</title>
     <style>
         :root {
-            /* Sophisticated 'Sapphire Steel' Palette */
-            --bg-body: #0a0e14; /* Deep, muted black-blue */
-            --bg-card: #111a27; /* Dark sapphire card */
-            --border-color: #212f42; /* Steel Blue border */
-            --accent: #5c85ff; /* Polished Sapphire Accent */
-            --accent-hover: #4065d6; /* Deeper Sapphire */
-            --text-main: #f1f5f9; /* Slate 100 */
-            --text-muted: #94a3b8; /* Slate 400 */
-            --text-card-muted: #71717a; /* Neutral 500 (Heavier text in cards) */
-
-            /* Typography & Touch */
-            --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
-            --feed-max-width: 600px;
-            --vault-grid-width: 800px; /* Wider for archive grid */
-            --radius-md: 10px;
-            --radius-lg: 14px;
+            --bg-body: #090d16;
+            --bg-card: #111827;
+            --border-color: #1f2937;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --feed-width: 600px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
             background-color: var(--bg-body);
             color: var(--text-main);
@@ -33,407 +25,297 @@
             line-height: 1.5;
             display: flex;
             justify-content: center;
-            -webkit-font-smoothing: antialiased;
         }
 
-        /* Container & Grid (Feed vs Vault view) */
         main {
             width: 100%;
-            max-width: var(--feed-max-width);
+            max-width: var(--feed-width);
             border-left: 1px solid var(--border-color);
             border-right: 1px solid var(--border-color);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            padding-bottom: 90px; /* Space for FAB */
-            transition: max-width 0.3s ease;
+            padding-bottom: 90px;
         }
 
-        /* Expands main when viewing Archive Vault */
-        main.vault-active { max-width: var(--vault-grid-width); }
-
-        /* Integrated Header/Archive Interface */
         header {
             position: sticky; top: 0;
-            background: rgba(10, 14, 20, 0.95); /* --bg-body */
-            backdrop-filter: blur(12px);
+            background: rgba(9, 13, 22, 0.9);
+            backdrop-filter: blur(8px);
             border-bottom: 1px solid var(--border-color);
-            padding: 1.25rem;
+            padding: 1rem;
             z-index: 10;
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
         }
 
-        header h1 {
-            font-size: 1.4rem; font-weight: 800; color: var(--text-main);
-            letter-spacing: -1px; text-transform: uppercase; flex-shrink: 0;
-        }
+        header h1 { font-size: 1.25rem; font-weight: 800; color: var(--accent); }
 
-        /* Portal to Archive Space (Toggle) */
-        .archive-portal {
-            position: relative;
-            background: none; border: none; cursor: pointer;
-            padding: 0.5rem; border-radius: 50%;
-            transition: background 0.2s;
-        }
-
-        .archive-portal:hover { background-color: var(--bg-card); }
-        .archive-portal:hover .portal-icon { fill: var(--accent); }
-
-        /* Optimized Search Function (Portal to Vault) */
-        .search-container {
-            position: relative; flex: 1;
-        }
-
+        .search-container { position: relative; flex: 1; }
         #search-input {
-            width: 100%; padding: 0.6rem 1.25rem 0.6rem 2.8rem;
-            background-color: #1a2737; /* Lighter than card, defined */
-            border: 1px solid var(--border-color);
-            color: var(--text-main); border-radius: 999px;
-            font-size: 0.95rem; outline: none;
-            transition: border-color 0.2s;
+            width: 100%; padding: 0.5rem 1rem 0.5rem 2.2rem;
+            background-color: #1f2937; border: 1px solid var(--border-color);
+            color: var(--text-main); border-radius: 999px; outline: none; font-size: 0.9rem;
         }
+        .search-icon { position: absolute; left: 0.8rem; top: 52%; transform: translateY(-50%); width: 14px; height: 14px; fill: var(--text-muted); }
 
-        #search-input:focus { border-color: var(--accent); }
-
-        /* Simplified Post Card (Sapphire Edition) */
+        /* Post Cards */
         .post-card {
-            padding: 1.5rem 1.25rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex; flex-direction: column;
-            gap: 1rem; position: relative;
-            transition: background 0.2s;
+            padding: 1.25rem; border-bottom: 1px solid var(--border-color);
+            display: flex; flex-direction: column; gap: 0.75rem; position: relative;
         }
-        .post-card:hover { background-color: rgba(255, 255, 255, 0.02); }
+        .post-meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); }
+        .username { font-weight: 700; color: var(--text-main); }
+        .post-text { font-size: 0.95rem; white-space: pre-wrap; color: var(--text-main); }
+        .post-tag { color: var(--accent); font-weight: 600; font-size: 0.9rem; }
+        
+        .post-image-container { border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); margin-top: 0.25rem; }
+        .post-image { width: 100%; height: auto; display: block; }
 
-        /* Weightier Meta Data */
-        .post-meta {
-            display: flex; justify-content: space-between; align-items: center;
-            font-size: 0.9rem; color: var(--text-card-muted);
-        }
-        .username {
-            font-weight: 700; color: var(--text-main);
-            display: flex; align-items: center; gap: 0.6rem;
-        }
-        .avatar-static {
-            width: 36px; height: 36px; border-radius: 50%;
-            background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%); /* Sapphire Grad */
-        }
-
-        .post-text {
-            color: var(--text-main); font-size: 1rem;
-            white-space: pre-wrap; margin-bottom: 0.5rem;
-        }
-        .post-tag { color: var(--accent); font-weight: 600; text-decoration: none; }
-
-        /* Offline Photo container */
-        .post-image-container {
-            border-radius: var(--radius-md); overflow: hidden;
-            border: 1px solid var(--border-color);
-            display: none; /* JS enables if photo exists */
-        }
-        .post-image { width: 100%; height: auto; display: block; object-fit: cover; }
-
-        /* Premium Icon Button (Edit/Rewrite) */
         .edit-btn {
-            position: absolute; top: 1.5rem; right: 1.25rem;
-            background: none; border: none; cursor: pointer;
-            padding: 0.25rem; border-radius: 4px;
+            position: absolute; top: 1.25rem; right: 1.25rem;
+            background: none; border: none; cursor: pointer; color: var(--text-muted);
         }
-        .edit-btn:hover .icon-svg { fill: var(--accent); }
+        .edit-btn:hover { color: var(--accent); }
 
-        /* The ARCHIVE SPACE (The Vault) */
-        #archive-vault {
-            display: none; /* Only visible when toggled */
-            padding: 2rem 1.25rem;
-            flex-direction: column; gap: 2rem;
-        }
-
-        .vault-header { display: flex; justify-content: space-between; align-items: center; }
-        .vault-header h2 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
-
-        /* Archive Grid (Premium list structure) */
-        .archive-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 1.25rem;
-        }
-
-        .archive-item {
-            background-color: var(--bg-card); border-radius: var(--radius-md);
-            padding: 1.25rem; border: 1px solid var(--border-color);
-            display: flex; flex-direction: column; gap: 0.75rem;
-            cursor: pointer; transition: transform 0.2s, border-color 0.2s;
-        }
-        .archive-item:hover { transform: translateY(-3px); border-color: var(--accent); }
-
-        .archive-text-snip { font-size: 0.9rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-        .archive-tag { color: var(--accent); font-weight: 600; font-size: 0.8rem; text-transform: uppercase;}
-
-        /* Premium Floating Action Button (Commit) */
+        /* FAB */
         .fab {
             position: fixed; bottom: 25px; right: 25px;
-            width: 60px; height: 60px;
-            background-color: var(--accent);
-            border: none; border-radius: 50%;
-            box-shadow: 0 10px 30px rgba(92, 133, 255, 0.4);
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            z-index: 100;
-            transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+            width: 56px; height: 56px; background-color: var(--accent);
+            border: none; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
+        .fab:hover { background-color: var(--accent-hover); }
+        .fab-icon { width: 24px; height: 24px; fill: none; stroke: white; stroke-width: 2.5; }
 
-        .fab:hover {
-            transform: scale(1.1) translateY(-4px);
-            background-color: var(--accent-hover);
-            box-shadow: 0 14px 40px rgba(92, 133, 255, 0.6);
-        }
-
-        /* SVG ICONS (Weighty & Premium) */
-        .icon-svg { width: 20px; height: 20px; fill: var(--text-card-muted); transition: fill 0.2s; }
-        .fab-icon { width: 28px; height: 28px; fill: var(--bg-body); }
-        .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); fill: var(--text-card-muted); width: 18px; height: 18px; pointer-events: none;}
-        .portal-icon { width: 22px; height: 22px; }
-
-        /* Composition Modal (Toggled by FAB) */
+        /* Modal Writing Window */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 14, 20, 0.85); backdrop-filter: blur(8px);
-            display: flex; justify-content: center; align-items: flex-start;
-            padding-top: 5vh;
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease; z-index: 200;
+            background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+            align-items: flex-start; padding-top: 10vh; opacity: 0; pointer-events: none; z-index: 200;
+            transition: opacity 0.2s ease;
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
-
         .modal-content {
             background: var(--bg-card); width: 90%; max-width: 500px;
-            border-radius: var(--radius-lg); border: 1px solid var(--border-color);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
-            transform: translateY(-30px); transition: transform 0.3s ease;
-            overflow: hidden;
+            border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden;
         }
-        .modal-overlay.active .modal-content { transform: translateY(0); }
-
-        .modal-header { padding: 1.25rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
-        .modal-header h3 { font-size: 1.2rem; color: var(--text-main); font-weight: 700; }
-        .close-btn { background: none; border: none; color: var(--accent); cursor: pointer; font-weight: 600;}
-
-        /* Text Input area */
+        .modal-header { padding: 1rem; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); }
+        
         .post-textarea {
-            width: 100%; height: 160px; background: transparent; color: var(--text-main);
-            border: none; padding: 1.5rem 1.25rem;
-            font-family: var(--font-stack); font-size: 1.05rem; resize: none; outline: none;
+            width: 100%; height: 120px; background: transparent; color: var(--text-main);
+            border: none; padding: 1rem; font-family: var(--font-stack); font-size: 1rem; resize: none; outline: none;
         }
 
-        /* Tag & Photo Upload Row */
-        .input-row { padding: 0 1.25rem 1.25rem; display: flex; align-items: center; gap: 1rem; border-top: none; }
-        .tag-input { flex: 1; background: transparent; border: 1px solid var(--border-color); border-radius: 999px; color: var(--accent); padding: 0.6rem 1.25rem; outline: none; font-size: 0.95rem;}
+        /* Live Image Preview Area inside Drawer */
+        #preview-container { padding: 0 1rem 1rem; display: none; }
+        #preview-img { max-width: 100px; max-height: 100px; border-radius: 6px; border: 1px solid var(--border-color); }
 
-        /* Hide actual file input */
+        .input-row { padding: 0 1rem 1rem; display: flex; gap: 1rem; align-items: center; }
+        .tag-input { flex: 1; background: transparent; border: 1px solid var(--border-color); border-radius: 999px; color: var(--text-main); padding: 0.4rem 1rem; outline: none; }
         #photo-input { display: none; }
+        .photo-btn { background: none; border: 1px solid var(--border-color); color: var(--text-muted); padding: 0.4rem 1rem; border-radius: 999px; cursor: pointer; font-size: 0.85rem; }
 
-        /* Stylized Photo Trigger Button (Weighty Icon) */
-        .photo-btn {
-            background: none; border: 1px solid var(--border-color); color: var(--text-card-muted);
-            padding: 0.6rem; border-radius: 50%;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-        .photo-btn:hover { border-color: var(--text-card-muted); color: var(--text-main); }
-        .photo-btn:hover .icon-svg { fill: var(--text-main); }
-
-        /* The Submit (Commit) Bar */
-        .submit-container {
-            display: flex; justify-content: flex-end; padding: 1rem 1.25rem;
-            border-top: 1px solid var(--border-color); background: rgba(255,255,255,0.015);
-        }
-        .submit-btn {
-            background: var(--accent); color: var(--bg-body); border: none; padding: 0.7rem 1.75rem; border-radius: 999px; cursor: pointer; font-weight: 700; font-size: 0.95rem;
-        }
-
+        .submit-container { display: flex; justify-content: flex-end; padding: 0.75rem 1rem; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.1); }
+        .submit-btn { background: var(--accent); color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 999px; cursor: pointer; font-weight: 700; }
     </style>
 </head>
 <body>
 
-    <main id="app-viewport">
+    <main>
         <header>
             <h1>Palimpsest</h1>
-            
-            <!-- Optimized Search Container -->
             <div class="search-container">
-                <!-- Search/Magnify Glyph (Heavy weight) -->
                 <svg class="search-icon" viewBox="0 0 24 24"><path d="M21.71 20.29l-1.42 1.42a1 1 0 0 1-1.42 0l-3.8-3.8a8 8 0 1 1 1.42-1.42l3.8 3.8a1 1 0 0 1 0 1.42zM10 16a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"></path></svg>
-                <input type="search" id="search-input" placeholder="Search archive (The Vault)..." aria-label="Search posts">
+                <input type="search" id="search-input" placeholder="Search entries...">
             </div>
-
-            <!-- Portal Icon to Dedicated Archive Vault -->
-            <button class="archive-portal" id="toggle-vault-view" title="Toggle dedicated archive space (The Vault)">
-                <!-- Modern, heavy archive glyph -->
-                <svg class="portal-icon" viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 2v1h16V6H4zm0 3v9h16V9H4zm2 2h12v1H6v-1zm0 2h8v1H6v-1zm0 2h12v1H6v-1z"></path></svg>
-            </button>
         </header>
 
-        <!-- Main thought feed -->
-        <div id="feed-container">
-            
-            <!-- Sample Post Card (Sapphire Edition) -->
-            <article class="post-card">
-                <div class="post-meta">
-                    <span class="username">
-                        <div class="avatar-static"></div>
-                        resilient_resurfacing
-                    </span>
-                    <span class="timestamp">· 1h ago</span>
-                </div>
-                
-                <p class="post-text">True minimalism vanishes. The interface should offer zero resistance between the thought and the commit. Every pixel must justify its presence. #design #offline</p>
-                
-                <!-- Heavy Pencil Glyph (Re-edit) -->
-                <button class="edit-btn" title="Overwrite/Edit this layer">
-                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
-                </button>
-            </article>
-
-            <article class="post-card">
-                <div class="post-meta">
-                    <span class="username">
-                        <div class="avatar-static"></div>
-                        resilient_resurfacing
-                    </span>
-                    <span class="timestamp">· 4h ago</span>
-                </div>
-                
-                <p class="post-text">The archive isn't information storage; it's perspective shifting. The database never leaves the device. Resilient. Resurfacing. #metadata</p>
-                <button class="edit-btn"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg></button>
-            </article>
-
-        </div>
-
-        <!-- THE VAULT (DEDICATED ARCHIVE SPACE) - Hidden by default -->
-        <div id="archive-vault">
-            <div class="vault-header">
-                <h2>The Vault</h2>
-                <span class="tag-input" style="padding: 0.5rem 1rem; flex:0; font-size: 0.8rem;">Structured Archive</span>
-            </div>
-            
-            <div class="archive-grid">
-                <!-- Sample archive item -->
-                <div class="archive-item">
-                    <span class="archive-tag">#DESIGN</span>
-                    <p class="archive-text-snip">True minimalism vanishes. The interface should...</p>
-                    <span class="timestamp" style="font-size:0.8rem; color:var(--text-card-muted);">Jan 12</span>
-                </div>
-                <div class="archive-item">
-                    <span class="archive-tag">#OFFLINE</span>
-                    <p class="archive-text-snip">IndexedDB storage is natively resilient and...</p>
-                    <span class="timestamp" style="font-size:0.8rem; color:var(--text-card-muted);">Jan 10</span>
-                </div>
-                <div class="archive-item">
-                    <span class="archive-tag">#RESILIENCE</span>
-                    <p class="archive-text-snip">A personal thought feed should offer zero...</p>
-                    <span class="timestamp" style="font-size:0.8rem; color:var(--text-card-muted);">Jan 09</span>
-                </div>
-            </div>
-        </div>
+        <div id="feed-container"></div>
     </main>
 
-    <!-- Floating Action Button (Heavy Sapphire Plus Glyph) -->
-    <button class="fab" id="toggle-writer" aria-label="Commit new layer">
-        <!-- Heavy Plus Glyph -->
-        <svg class="fab-icon" viewBox="0 0 24 24"><path d="M19 11H13V5a1 1 0 0 0-2 0v6H5a1 1 0 0 0 0 2h6v6a1 1 0 0 0 2 0v-6h6a1 1 0 0 0 0-2z"></path></svg>
+    <button class="fab" id="toggle-writer">
+        <svg class="fab-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
     </button>
 
-    <!-- Contemporary Composition Modal (Sapphire Theme) -->
     <div class="modal-overlay" id="writer-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Draft New Thought</h3>
-                <button class="close-btn" id="close-modal">Cancel</button>
+                <h3 id="modal-title">Draft New Thought</h3>
+                <button type="button" style="background:none; border:none; color:var(--accent); cursor:pointer;" id="close-modal">Cancel</button>
             </div>
             <form id="post-form">
-                <textarea class="post-textarea" id="post-text" placeholder="What thought is solidifying?"></textarea>
+                <input type="hidden" id="entry-id">
+                <textarea class="post-textarea" id="post-text" placeholder="What's on your mind?" required></textarea>
                 
-                <div class="input-row">
-                    <!-- Integrated Tag Input -->
-                    <input type="text" class="tag-input" id="post-tag" placeholder="Optional #tag">
-                    
-                    <!-- Weighty Camera Glyph (Photo) -->
-                    <button type="button" class="photo-btn" id="trigger-photo">
-                        <svg class="icon-svg" style="width:18px; height:18px;" viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
-                    </button>
-                    <!-- The hidden file input -->
-                    <input type="file" id="photo-input" accept="image/*">
+                <div id="preview-container">
+                    <img id="preview-img" src="" alt="Preview">
                 </div>
 
+                <div class="input-row">
+                    <input type="text" class="tag-input" id="post-tag" placeholder="#tag">
+                    <button type="button" class="photo-btn" id="trigger-photo">Add Photo</button>
+                    <input type="file" id="photo-input" accept="image/*">
+                </div>
                 <div class="submit-container">
-                    <button type="submit" class="submit-btn">Commit</button>
+                    <button type="submit" class="submit-btn" id="submit-form-btn">Commit</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        const viewport = document.getElementById('app-viewport');
-        const feed = document.getElementById('feed-container');
-        const vault = document.getElementById('archive-vault');
-        const vaultToggle = document.getElementById('toggle-vault-view');
+        // --- OFFLINE DATABASE ENGINE (IndexedDB) ---
+        let db;
+        const request = indexedDB.open('PalimpsestDB', 1);
 
+        request.onupgradeneeded = (e) => {
+            db = e.target.result;
+            if (!db.objectStoreNames.contains('entries')) {
+                db.createObjectStore('entries', { keyPath: 'id', autoIncrement: true });
+            }
+        };
+
+        request.onsuccess = (e) => {
+            db = e.target.result;
+            renderFeed();
+        };
+
+        request.onerror = () => console.error("Database failed to load");
+
+        // --- CORE APPLICATION LOGIC ---
         const modal = document.getElementById('writer-modal');
-        const toggleBtn = document.getElementById('toggle-writer');
-        const closeBtn = document.getElementById('close-modal');
-        
-        // Modal interactivity
-        toggleBtn.addEventListener('click', () => modal.classList.add('active'));
-        closeBtn.addEventListener('click', () => { modal.classList.remove('active'); });
-
-        // Close modal if user clicks the backdrop
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.classList.remove('active');
-        });
-
-        // Toggle DEDICATED ARCHIVE VAULT View
-        vaultToggle.addEventListener('click', () => {
-            if (vault.style.display === 'flex') {
-                vault.style.display = 'none';
-                feed.style.display = 'block';
-                viewport.classList.remove('vault-active');
-            } else {
-                vault.style.display = 'flex';
-                feed.style.display = 'none';
-                viewport.classList.add('vault-active');
-            }
-        });
-
-        // Integrate Photo Interactivity
+        const form = document.getElementById('post-form');
+        const feed = document.getElementById('feed-container');
         const photoInput = document.getElementById('photo-input');
-        const triggerPhoto = document.getElementById('trigger-photo');
-        triggerPhoto.addEventListener('click', () => photoInput.click());
+        const previewContainer = document.getElementById('preview-container');
+        const previewImg = document.getElementById('preview-img');
+        let currentEncodedImage = "";
 
-        // Simple placeholder logic for Search/Archive Portal Focus
-        const searchInput = document.getElementById('search-input');
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-            
-            // Activate Vault view immediately when user starts typing
-            vault.style.display = 'flex';
-            feed.style.display = 'none';
-            viewport.classList.add('vault-active');
+        // Modal triggers
+        document.getElementById('toggle-writer').addEventListener('click', () => {
+            form.reset();
+            document.getElementById('entry-id').value = "";
+            document.getElementById('modal-title').textContent = "Draft New Thought";
+            previewContainer.style.display = 'none';
+            currentEncodedImage = "";
+            modal.classList.add('active');
+        });
 
-            const items = document.querySelectorAll('.archive-item');
-            items.forEach(item => {
-                const text = item.querySelector('.archive-text-snip').textContent.toLowerCase();
-                if (text.includes(query)) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-            // If user clears the query, return to main feed
-            if (query === '') {
-                vault.style.display = 'none';
-                feed.style.display = 'block';
-                viewport.classList.remove('vault-active');
+        document.getElementById('close-modal').addEventListener('click', () => modal.classList.remove('active'));
+
+        // Handle live local photo picking & dynamic previewing
+        document.getElementById('trigger-photo').addEventListener('click', () => photoInput.click());
+        photoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    currentEncodedImage = event.target.result;
+                    previewImg.src = currentEncodedImage;
+                    previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
             }
+        });
+
+        // Save / Overwrite Form Submission
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const idVal = document.getElementById('entry-id').value;
+            const textVal = document.getElementById('post-text').value;
+            const tagVal = document.getElementById('post-tag').value;
+
+            const tx = db.transaction('entries', 'readwrite');
+            const store = tx.objectStore('entries');
+
+            const item = {
+                text: textVal,
+                tag: tagVal,
+                image: currentEncodedImage,
+                timestamp: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            };
+
+            if (idVal) {
+                item.id = Number(idVal); // Retain original primary key to overwrite
+                store.put(item);
+            } else {
+                store.add(item);
+            }
+
+            tx.oncomplete = () => {
+                modal.classList.remove('active');
+                form.reset();
+                previewContainer.style.display = 'none';
+                currentEncodedImage = "";
+                renderFeed();
+            };
+        });
+
+        // Dynamic feed rendering engine
+        function renderFeed(searchQuery = "") {
+            feed.innerHTML = "";
+            const tx = db.transaction('entries', 'readonly');
+            const store = tx.objectStore('entries');
+            const request = store.openCursor(null, 'prev'); // Reverse chronological order
+
+            request.onsuccess = (e) => {
+                const cursor = e.target.result;
+                if (cursor) {
+                    const data = cursor.value;
+                    
+                    // Live search filtration rule
+                    if (searchQuery && !data.text.toLowerCase().includes(searchQuery) && !data.tag.toLowerCase().includes(searchQuery)) {
+                        cursor.continue();
+                        return;
+                    }
+
+                    const card = document.createElement('article');
+                    card.className = 'post-card';
+                    card.innerHTML = `
+                        <div class="post-meta">
+                            <span class="username">thought_stream</span>
+                            <span>${data.timestamp}</span>
+                        </div>
+                        <p class="post-text">${data.text}</p>
+                        ${data.tag ? `<span class="post-tag">${data.tag.startsWith('#') ? data.tag : '#' + data.tag}</span>` : ''}
+                        ${data.image ? `<div class="post-image-container"><img src="${data.image}" class="post-image" alt="Embedded attachment"></div>` : ''}
+                        <button class="edit-btn" onclick="openForOverwrite(${data.id})" title="Overwrite this entry">
+                            <svg style="width:16px; height:16px; fill:currentColor;" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                        </button>
+                    `;
+                    feed.appendChild(card);
+                    cursor.continue();
+                }
+            };
+        }
+
+        // Hook dynamic editing up to Database IDs
+        window.openForOverwrite = function(id) {
+            const tx = db.transaction('entries', 'readonly');
+            const store = tx.objectStore('entries');
+            store.get(id).onsuccess = (e) => {
+                const data = e.target.result;
+                document.getElementById('entry-id').value = data.id;
+                document.getElementById('post-text').value = data.text;
+                document.getElementById('post-tag').value = data.tag;
+                document.getElementById('modal-title').textContent = "Overwrite Layer";
+                
+                if (data.image) {
+                    currentEncodedImage = data.image;
+                    previewImg.src = data.image;
+                    previewContainer.style.display = 'block';
+                } else {
+                    currentEncodedImage = "";
+                    previewContainer.style.display = 'none';
+                }
+                modal.classList.add('active');
+            };
+        };
+
+        // Real-time local search connection
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            renderFeed(e.target.value.toLowerCase());
         });
     </script>
 </body>
