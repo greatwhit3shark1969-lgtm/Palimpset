@@ -1,4 +1,4 @@
-const CACHE_NAME = 'palimpsest-shell-v4';
+const CACHE_NAME = 'palimpsest-shell-v5';
 const SHELL_FILES = [
   './',
   'index.html',
