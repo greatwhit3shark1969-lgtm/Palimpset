@@ -3,23 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Palimpsest | Private Feed</title>
+    <title>Palimpsest | Resilient Archive</title>
     <style>
         :root {
-            /* Premium 'Emerald Ocean' Palette */
-            --bg-body: #05161A; /* Deepest Ocean Black */
-            --bg-card: #072A33; /* Dark Teal Slate */
-            --border-color: #0F4C5C; /* Muted Teal Border */
-            --accent: #10B981; /* Emerald Green */
-            --accent-hover: #059669; /* Darker Emerald */
-            --text-main: #E2E8F0; /* Clean Off-White */
-            --text-muted: #94A3B8; /* Muted Gray */
+            /* Sophisticated 'Sapphire Steel' Palette */
+            --bg-body: #0a0e14; /* Deep, muted black-blue */
+            --bg-card: #111a27; /* Dark sapphire card */
+            --border-color: #212f42; /* Steel Blue border */
+            --accent: #5c85ff; /* Polished Sapphire Accent */
+            --accent-hover: #4065d6; /* Deeper Sapphire */
+            --text-main: #f1f5f9; /* Slate 100 */
+            --text-muted: #94a3b8; /* Slate 400 */
+            --text-card-muted: #71717a; /* Neutral 500 (Heavier text in cards) */
 
-            /* Layout and Feel */
-            --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            /* Typography & Touch */
+            --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
             --feed-max-width: 600px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
+            --vault-grid-width: 800px; /* Wider for archive grid */
+            --radius-md: 10px;
+            --radius-lg: 14px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,10 +33,10 @@
             line-height: 1.5;
             display: flex;
             justify-content: center;
-            -webkit-font-smoothing: antialiased; /* Smoother text */
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Container & Grid (Desktop vs Mobile) */
+        /* Container & Grid (Feed vs Vault view) */
         main {
             width: 100%;
             max-width: var(--feed-max-width);
@@ -45,164 +47,136 @@
             flex-direction: column;
             position: relative;
             padding-bottom: 90px; /* Space for FAB */
+            transition: max-width 0.3s ease;
         }
 
-        /* Integrated Search/Header */
+        /* Expands main when viewing Archive Vault */
+        main.vault-active { max-width: var(--vault-grid-width); }
+
+        /* Integrated Header/Archive Interface */
         header {
-            position: sticky;
-            top: 0;
-            background: rgba(5, 22, 26, 0.95);
+            position: sticky; top: 0;
+            background: rgba(10, 14, 20, 0.95); /* --bg-body */
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
-            padding: 1rem;
+            padding: 1.25rem;
             z-index: 10;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 1.5rem;
         }
 
         header h1 {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: var(--accent);
-            letter-spacing: -0.5px;
-            flex-shrink: 0;
+            font-size: 1.4rem; font-weight: 800; color: var(--text-main);
+            letter-spacing: -1px; text-transform: uppercase; flex-shrink: 0;
         }
 
-        /* The Premium Search Function */
-        .search-container {
+        /* Portal to Archive Space (Toggle) */
+        .archive-portal {
             position: relative;
-            flex: 1;
+            background: none; border: none; cursor: pointer;
+            padding: 0.5rem; border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .archive-portal:hover { background-color: var(--bg-card); }
+        .archive-portal:hover .portal-icon { fill: var(--accent); }
+
+        /* Optimized Search Function (Portal to Vault) */
+        .search-container {
+            position: relative; flex: 1;
         }
 
         #search-input {
-            width: 100%;
-            padding: 0.6rem 1rem 0.6rem 2.5rem;
-            background-color: #0c3d49; /* Slightly lighter than card */
+            width: 100%; padding: 0.6rem 1.25rem 0.6rem 2.8rem;
+            background-color: #1a2737; /* Lighter than card, defined */
             border: 1px solid var(--border-color);
-            color: var(--text-main);
-            border-radius: 999px;
-            font-size: 0.9rem;
-            outline: none;
+            color: var(--text-main); border-radius: 999px;
+            font-size: 0.95rem; outline: none;
             transition: border-color 0.2s;
         }
 
-        #search-input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-        }
+        #search-input:focus { border-color: var(--accent); }
 
-        .search-icon {
-            position: absolute;
-            left: 0.9rem;
-            top: 50%;
-            transform: translateY(-50%);
-            fill: var(--text-muted);
-            width: 16px;
-            height: 16px;
-            pointer-events: none;
-        }
-
-        /* Simplified Premium Post Card */
+        /* Simplified Post Card (Sapphire Edition) */
         .post-card {
-            padding: 1.25rem 1rem;
+            padding: 1.5rem 1.25rem;
             border-bottom: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column; /* Simplified from grid, flows better */
-            gap: 0.75rem;
+            display: flex; flex-direction: column;
+            gap: 1rem; position: relative;
             transition: background 0.2s;
-            position: relative;
         }
+        .post-card:hover { background-color: rgba(255, 255, 255, 0.02); }
 
-        .post-card:hover {
-            background-color: rgba(255, 255, 255, 0.02);
-        }
-
+        /* Weightier Meta Data */
         .post-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.85rem;
-            color: var(--text-muted);
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.9rem; color: var(--text-card-muted);
         }
-
         .username {
-            font-weight: 700;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            font-weight: 700; color: var(--text-main);
+            display: flex; align-items: center; gap: 0.6rem;
         }
-
         .avatar-static {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: linear-gradient(135deg, #10B981 0%, #064E3B 100%);
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%); /* Sapphire Grad */
         }
 
         .post-text {
-            color: var(--text-main);
-            font-size: 0.95rem;
-            white-space: pre-wrap;
-            margin-bottom: 0.25rem;
+            color: var(--text-main); font-size: 1rem;
+            white-space: pre-wrap; margin-bottom: 0.5rem;
         }
+        .post-tag { color: var(--accent); font-weight: 600; text-decoration: none; }
 
-        .post-tag { color: var(--accent); font-weight: 500; font-size: 0.9rem;}
-
-        /* Photo Display (Offline Compatible) */
+        /* Offline Photo container */
         .post-image-container {
-            margin-top: 0.5rem;
-            max-width: 100%;
-            border-radius: var(--radius-md);
-            overflow: hidden;
+            border-radius: var(--radius-md); overflow: hidden;
             border: 1px solid var(--border-color);
-            display: none; /* Hidden by default, JS enables if photo exists */
+            display: none; /* JS enables if photo exists */
+        }
+        .post-image { width: 100%; height: auto; display: block; object-fit: cover; }
+
+        /* Premium Icon Button (Edit/Rewrite) */
+        .edit-btn {
+            position: absolute; top: 1.5rem; right: 1.25rem;
+            background: none; border: none; cursor: pointer;
+            padding: 0.25rem; border-radius: 4px;
+        }
+        .edit-btn:hover .icon-svg { fill: var(--accent); }
+
+        /* The ARCHIVE SPACE (The Vault) */
+        #archive-vault {
+            display: none; /* Only visible when toggled */
+            padding: 2rem 1.25rem;
+            flex-direction: column; gap: 2rem;
         }
 
-        .post-image {
-            width: 100%;
-            height: auto;
-            display: block;
-            object-fit: cover;
-            /* Subtly desaturate offline images for aesthetic consistency */
-            filter: sepia(15%) contrast(105%);
-        }
+        .vault-header { display: flex; justify-content: space-between; align-items: center; }
+        .vault-header h2 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
 
-        /* Post Action Bar (Thread and Re-edit) */
-        .post-actions {
-            display: flex;
-            justify-content: flex-end;
+        /* Archive Grid (Premium list structure) */
+        .archive-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 1.25rem;
-            padding-top: 0.5rem;
         }
 
-        .action-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            transition: color 0.2s;
+        .archive-item {
+            background-color: var(--bg-card); border-radius: var(--radius-md);
+            padding: 1.25rem; border: 1px solid var(--border-color);
+            display: flex; flex-direction: column; gap: 0.75rem;
+            cursor: pointer; transition: transform 0.2s, border-color 0.2s;
         }
+        .archive-item:hover { transform: translateY(-3px); border-color: var(--accent); }
 
-        .action-btn:hover { color: var(--accent); }
+        .archive-text-snip { font-size: 0.9rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .archive-tag { color: var(--accent); font-weight: 600; font-size: 0.8rem; text-transform: uppercase;}
 
-        .icon-svg {
-            width: 18px; height: 18px;
-            fill: currentColor; /* Inherits color from parent */
-        }
-
-        /* The Premium FAB (Emerald Compose) */
+        /* Premium Floating Action Button (Commit) */
         .fab {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            width: 56px; height: 56px;
+            position: fixed; bottom: 25px; right: 25px;
+            width: 60px; height: 60px;
             background-color: var(--accent);
             border: none; border-radius: 50%;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(92, 133, 255, 0.4);
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             z-index: 100;
@@ -210,188 +184,166 @@
         }
 
         .fab:hover {
-            transform: scale(1.08) translateY(-3px);
+            transform: scale(1.1) translateY(-4px);
             background-color: var(--accent-hover);
-            box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 14px 40px rgba(92, 133, 255, 0.6);
         }
 
-        .fab-icon {
-            width: 24px; height: 24px;
-            stroke: var(--bg-body);
-            stroke-width: 2.5;
-            fill: none;
-        }
+        /* SVG ICONS (Weighty & Premium) */
+        .icon-svg { width: 20px; height: 20px; fill: var(--text-card-muted); transition: fill 0.2s; }
+        .fab-icon { width: 28px; height: 28px; fill: var(--bg-body); }
+        .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); fill: var(--text-card-muted); width: 18px; height: 18px; pointer-events: none;}
+        .portal-icon { width: 22px; height: 22px; }
 
-        /* Modern Composition Modal (Emerald Overlay) */
+        /* Composition Modal (Toggled by FAB) */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(4px);
+            background: rgba(10, 14, 20, 0.85); backdrop-filter: blur(8px);
             display: flex; justify-content: center; align-items: flex-start;
             padding-top: 5vh;
             opacity: 0; pointer-events: none;
             transition: opacity 0.3s ease; z-index: 200;
         }
-
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
 
         .modal-content {
-            background: #072A33; /* --bg-card */
-            width: 90%; max-width: 500px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
-            transform: translateY(-20px);
-            transition: transform 0.3s ease;
+            background: var(--bg-card); width: 90%; max-width: 500px;
+            border-radius: var(--radius-lg); border: 1px solid var(--border-color);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+            transform: translateY(-30px); transition: transform 0.3s ease;
             overflow: hidden;
         }
-
         .modal-overlay.active .modal-content { transform: translateY(0); }
 
-        .modal-header {
-            padding: 1rem 1.25rem;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .modal-header h3 { font-size: 1.1rem; color: var(--text-main); font-weight: 700; }
-
-        .close-btn {
-            background: none; border: none; color: var(--accent);
-            cursor: pointer; font-weight: 600; font-size: 0.9rem;
-        }
+        .modal-header { padding: 1.25rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .modal-header h3 { font-size: 1.2rem; color: var(--text-main); font-weight: 700; }
+        .close-btn { background: none; border: none; color: var(--accent); cursor: pointer; font-weight: 600;}
 
         /* Text Input area */
         .post-textarea {
-            width: 100%; height: 140px;
-            background: transparent; color: var(--text-main);
-            border: none; padding: 1.25rem;
-            font-family: var(--font-stack); font-size: 1rem;
-            resize: none; outline: none;
+            width: 100%; height: 160px; background: transparent; color: var(--text-main);
+            border: none; padding: 1.5rem 1.25rem;
+            font-family: var(--font-stack); font-size: 1.05rem; resize: none; outline: none;
         }
 
-        /* Optional Tag & Photo Upload Row */
-        .input-row {
-            padding: 0 1.25rem 1rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            border-top: none;
-        }
-
-        .tag-input {
-            flex: 1;
-            background: transparent; border: 1px solid var(--border-color);
-            border-radius: 999px; color: var(--accent);
-            padding: 0.5rem 1rem; outline: none; font-size: 0.9rem;
-        }
+        /* Tag & Photo Upload Row */
+        .input-row { padding: 0 1.25rem 1.25rem; display: flex; align-items: center; gap: 1rem; border-top: none; }
+        .tag-input { flex: 1; background: transparent; border: 1px solid var(--border-color); border-radius: 999px; color: var(--accent); padding: 0.6rem 1.25rem; outline: none; font-size: 0.95rem;}
 
         /* Hide actual file input */
         #photo-input { display: none; }
 
-        /* Stylized Photo Trigger Button */
+        /* Stylized Photo Trigger Button (Weighty Icon) */
         .photo-btn {
-            background: none;
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            padding: 0.5rem 1rem;
-            border-radius: 999px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            display: flex; align-items: center; gap: 0.4rem;
+            background: none; border: 1px solid var(--border-color); color: var(--text-card-muted);
+            padding: 0.6rem; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
-        .photo-btn:hover { border-color: var(--text-muted); color: var(--text-main); }
+        .photo-btn:hover { border-color: var(--text-card-muted); color: var(--text-main); }
+        .photo-btn:hover .icon-svg { fill: var(--text-main); }
 
         /* The Submit (Commit) Bar */
         .submit-container {
-            display: flex; justify-content: flex-end;
-            padding: 0.75rem 1.25rem;
-            border-top: 1px solid var(--border-color);
-            background: rgba(255,255,255,0.02);
+            display: flex; justify-content: flex-end; padding: 1rem 1.25rem;
+            border-top: 1px solid var(--border-color); background: rgba(255,255,255,0.015);
         }
-
         .submit-btn {
-            background: var(--accent); color: var(--bg-body);
-            border: none; padding: 0.6rem 1.5rem;
-            border-radius: 999px; cursor: pointer;
-            font-weight: 700; font-size: 0.9rem;
+            background: var(--accent); color: var(--bg-body); border: none; padding: 0.7rem 1.75rem; border-radius: 999px; cursor: pointer; font-weight: 700; font-size: 0.95rem;
         }
 
     </style>
 </head>
 <body>
 
-    <main>
+    <main id="app-viewport">
         <header>
             <h1>Palimpsest</h1>
-            <!-- Search Function -->
+            
+            <!-- Optimized Search Container -->
             <div class="search-container">
-                <!-- Search Icon SVG -->
+                <!-- Search/Magnify Glyph (Heavy weight) -->
                 <svg class="search-icon" viewBox="0 0 24 24"><path d="M21.71 20.29l-1.42 1.42a1 1 0 0 1-1.42 0l-3.8-3.8a8 8 0 1 1 1.42-1.42l3.8 3.8a1 1 0 0 1 0 1.42zM10 16a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"></path></svg>
-                <input type="search" id="search-input" placeholder="Search archive..." aria-label="Search posts">
+                <input type="search" id="search-input" placeholder="Search archive (The Vault)..." aria-label="Search posts">
             </div>
+
+            <!-- Portal Icon to Dedicated Archive Vault -->
+            <button class="archive-portal" id="toggle-vault-view" title="Toggle dedicated archive space (The Vault)">
+                <!-- Modern, heavy archive glyph -->
+                <svg class="portal-icon" viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 2v1h16V6H4zm0 3v9h16V9H4zm2 2h12v1H6v-1zm0 2h8v1H6v-1zm0 2h12v1H6v-1z"></path></svg>
+            </button>
         </header>
 
+        <!-- Main thought feed -->
         <div id="feed-container">
             
-            <!-- Sample Post Card (Premium Emerald Edition with Photo, Thread, and Edit) -->
+            <!-- Sample Post Card (Sapphire Edition) -->
             <article class="post-card">
                 <div class="post-meta">
                     <span class="username">
                         <div class="avatar-static"></div>
-                        thought_stream
+                        resilient_resurfacing
                     </span>
-                    <span class="timestamp">· 2h ago</span>
+                    <span class="timestamp">· 1h ago</span>
                 </div>
                 
-                <p class="post-text">Minimalism isn't about absence; it's about the conscious choice of presence. Every design element must earn its place. #meta</p>
+                <p class="post-text">True minimalism vanishes. The interface should offer zero resistance between the thought and the commit. Every pixel must justify its presence. #design #offline</p>
                 
-                <!-- Photo Container (Hidden if no photo, enabled by JS) -->
-                <div class="post-image-container" id="sample-photo" style="display:block;">
-                    <!-- Sample photo from stock (offline compatibility note applies) -->
-                    <img src="https://images.unsplash.com/photo-1518131316531-1524e43f5509?q=80&w=600&auto=format&fit=crop" alt="Abstract modern architecture" class="post-image">
-                </div>
-
-                <div class="post-actions">
-                    <!-- Thread Icon Button (Design placeholder, logic required for functional threading) -->
-                    <button class="action-btn" title="Add to this thought stream">
-                        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 6V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3v3a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1zm-9 6H4V4h8v2H7a1 1 0 0 0-1 1v5zm11 6H8v-8h8v8z"></path></svg>
-                        + Thread
-                    </button>
-                    <!-- Pencil Icon for Re-Edit -->
-                    <button class="action-btn" title="Rewrite/Edit this layer">
-                        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
-                        Overwrite
-                    </button>
-                </div>
+                <!-- Heavy Pencil Glyph (Re-edit) -->
+                <button class="edit-btn" title="Overwrite/Edit this layer">
+                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
+                </button>
             </article>
 
-            <!-- Text-only Post Card -->
             <article class="post-card">
                 <div class="post-meta">
                     <span class="username">
                         <div class="avatar-static"></div>
-                        thought_stream
+                        resilient_resurfacing
                     </span>
-                    <span class="timestamp">· 5h ago</span>
+                    <span class="timestamp">· 4h ago</span>
                 </div>
-                <p class="post-text">IndexedDB + Service Worker makes this archive naturally resilient. True digital privacy means the data never leaves the device. #offline #privacy</p>
-                <div class="post-actions">
-                    <button class="action-btn"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 6V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3v3a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1zm-9 6H4V4h8v2H7a1 1 0 0 0-1 1v5zm11 6H8v-8h8v8z"></path></svg>+ Thread</button>
-                    <button class="action-btn"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>Overwrite</button>
-                </div>
+                
+                <p class="post-text">The archive isn't information storage; it's perspective shifting. The database never leaves the device. Resilient. Resurfacing. #metadata</p>
+                <button class="edit-btn"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg></button>
             </article>
 
         </div>
+
+        <!-- THE VAULT (DEDICATED ARCHIVE SPACE) - Hidden by default -->
+        <div id="archive-vault">
+            <div class="vault-header">
+                <h2>The Vault</h2>
+                <span class="tag-input" style="padding: 0.5rem 1rem; flex:0; font-size: 0.8rem;">Structured Archive</span>
+            </div>
+            
+            <div class="archive-grid">
+                <!-- Sample archive item -->
+                <div class="archive-item">
+                    <span class="archive-tag">#DESIGN</span>
+                    <p class="archive-text-snip">True minimalism vanishes. The interface should...</p>
+                    <span class="timestamp" style="font-size:0.8rem; color:var(--text-card-muted);">Jan 12</span>
+                </div>
+                <div class="archive-item">
+                    <span class="archive-tag">#OFFLINE</span>
+                    <p class="archive-text-snip">IndexedDB storage is natively resilient and...</p>
+                    <span class="timestamp" style="font-size:0.8rem; color:var(--text-card-muted);">Jan 10</span>
+                </div>
+                <div class="archive-item">
+                    <span class="archive-tag">#RESILIENCE</span>
+                    <p class="archive-text-snip">A personal thought feed should offer zero...</p>
+                    <span class="timestamp" style="font-size:0.8rem; color:var(--text-card-muted);">Jan 09</span>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <!-- Floating Action Button (Emerald Plus Icon) -->
+    <!-- Floating Action Button (Heavy Sapphire Plus Glyph) -->
     <button class="fab" id="toggle-writer" aria-label="Commit new layer">
-        <!-- Minimalist Plus SVG -->
-        <svg class="fab-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <!-- Heavy Plus Glyph -->
+        <svg class="fab-icon" viewBox="0 0 24 24"><path d="M19 11H13V5a1 1 0 0 0-2 0v6H5a1 1 0 0 0 0 2h6v6a1 1 0 0 0 2 0v-6h6a1 1 0 0 0 0-2z"></path></svg>
     </button>
 
-    <!-- Modern Composition Modal (Emerald Theme) -->
+    <!-- Contemporary Composition Modal (Sapphire Theme) -->
     <div class="modal-overlay" id="writer-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -399,19 +351,17 @@
                 <button class="close-btn" id="close-modal">Cancel</button>
             </div>
             <form id="post-form">
-                <textarea class="post-textarea" id="post-text" placeholder="What reflection is solidifying?"></textarea>
+                <textarea class="post-textarea" id="post-text" placeholder="What thought is solidifying?"></textarea>
                 
                 <div class="input-row">
-                    <!-- Optional #tag Input -->
+                    <!-- Integrated Tag Input -->
                     <input type="text" class="tag-input" id="post-tag" placeholder="Optional #tag">
                     
-                    <!-- Integrated Photo Upload -->
+                    <!-- Weighty Camera Glyph (Photo) -->
                     <button type="button" class="photo-btn" id="trigger-photo">
-                        <!-- Camera/Photo Icon SVG -->
-                        <svg class="icon-svg" style="width:16px; height:16px;" viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
-                        Attach Photo
+                        <svg class="icon-svg" style="width:18px; height:18px;" viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
                     </button>
-                    <!-- The actual hidden file input -->
+                    <!-- The hidden file input -->
                     <input type="file" id="photo-input" accept="image/*">
                 </div>
 
@@ -423,43 +373,67 @@
     </div>
 
     <script>
+        const viewport = document.getElementById('app-viewport');
+        const feed = document.getElementById('feed-container');
+        const vault = document.getElementById('archive-vault');
+        const vaultToggle = document.getElementById('toggle-vault-view');
+
         const modal = document.getElementById('writer-modal');
         const toggleBtn = document.getElementById('toggle-writer');
         const closeBtn = document.getElementById('close-modal');
         
-        // Photo upload interactivity
-        const photoInput = document.getElementById('photo-input');
-        const triggerPhoto = document.getElementById('trigger-photo');
-
+        // Modal interactivity
         toggleBtn.addEventListener('click', () => modal.classList.add('active'));
-        closeBtn.addEventListener('click', () => {
-            // Clean up when closing modal
-            modal.classList.remove('active');
-            photoInput.value = ''; // Reset photo selection
-        });
-
-        // Trigger the hidden file input when the photo button is tapped
-        triggerPhoto.addEventListener('click', () => photoInput.click());
+        closeBtn.addEventListener('click', () => { modal.classList.remove('active'); });
 
         // Close modal if user clicks the backdrop
         modal.addEventListener('click', (e) => {
             if (e.target === modal) modal.classList.remove('active');
         });
 
-        // Simple placeholder logic for Search Function Focus
+        // Toggle DEDICATED ARCHIVE VAULT View
+        vaultToggle.addEventListener('click', () => {
+            if (vault.style.display === 'flex') {
+                vault.style.display = 'none';
+                feed.style.display = 'block';
+                viewport.classList.remove('vault-active');
+            } else {
+                vault.style.display = 'flex';
+                feed.style.display = 'none';
+                viewport.classList.add('vault-active');
+            }
+        });
+
+        // Integrate Photo Interactivity
+        const photoInput = document.getElementById('photo-input');
+        const triggerPhoto = document.getElementById('trigger-photo');
+        triggerPhoto.addEventListener('click', () => photoInput.click());
+
+        // Simple placeholder logic for Search/Archive Portal Focus
         const searchInput = document.getElementById('search-input');
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
-            const cards = document.querySelectorAll('.post-card');
             
-            cards.forEach(card => {
-                const text = card.querySelector('.post-text').textContent.toLowerCase();
+            // Activate Vault view immediately when user starts typing
+            vault.style.display = 'flex';
+            feed.style.display = 'none';
+            viewport.classList.add('vault-active');
+
+            const items = document.querySelectorAll('.archive-item');
+            items.forEach(item => {
+                const text = item.querySelector('.archive-text-snip').textContent.toLowerCase();
                 if (text.includes(query)) {
-                    card.style.display = 'flex';
+                    item.style.display = 'flex';
                 } else {
-                    card.style.display = 'none';
+                    item.style.display = 'none';
                 }
             });
+            // If user clears the query, return to main feed
+            if (query === '') {
+                vault.style.display = 'none';
+                feed.style.display = 'block';
+                viewport.classList.remove('vault-active');
+            }
         });
     </script>
 </body>
