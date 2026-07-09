@@ -1,0 +1,16 @@
+{
+  "name": "Palimpsest",
+  "short_name": "Palimpsest",
+  "description": "Notes that come back to be rewritten, not just reread.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#17150F",
+  "theme_color": "#17150F",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
