@@ -1,438 +1,330 @@
-'use strict';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palimpsest</title>
+    <style>
+        :root {
+            --bg-color: #fcfbfa;
+            --text-main: #1c1b1a;
+            --text-muted: #706e6b;
+            --border-color: #e6e4e0;
+            --accent-color: #5c6b60; /* Muted olive/sage */
+            --resurface-highlight: #f4eae1; /* Soft parchment highlight */
+            --font-serif: "Adobe Caslon Pro", "Garamond", "Georgia", serif;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
 
-/* ---------- constants ---------- */
-const DB_NAME = 'palimpsest-db';
-const DB_VERSION = 1;
-const STORE = 'notes';
-const GRACE_MS = 10 * 60 * 1000; // 10 minutes before a note can resurface
-const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-const toRoman = n => n <= 10 ? (ROMAN[n] || String(n)) : String(n);
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            padding-bottom: 100px; /* Space for FAB */
+        }
 
-/* ---------- IndexedDB layer ---------- */
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        const store = db.createObjectStore(STORE, { keyPath: 'id' });
-        store.createIndex('createdAt', 'createdAt');
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
+        /* Header / Action Bar */
+        header {
+            position: sticky;
+            top: 0;
+            background: rgba(252, 251, 250, 0.95);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
 
-let dbPromise = openDB();
+        h1 {
+            font-family: var(--font-serif);
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
 
-async function dbAll() {
-  const db = await dbPromise;
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readonly');
-    const req = tx.objectStore(STORE).getAll();
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
+        .header-actions button {
+            background: none;
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
 
-async function dbPut(note) {
-  const db = await dbPromise;
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).put(note);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
+        .header-actions button:hover {
+            background: var(--border-color);
+        }
 
-async function dbDelete(id) {
-  const db = await dbPromise;
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).delete(id);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
+        /* The Prominent Feed Container */
+        main {
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
 
-/* ---------- state ---------- */
-let notes = [];               // in-memory cache, kept in sync with IDB
-let resurfacedIds = [];       // ids currently shown in the "returning to you" zone
-let pendingPhotoBlob = null;
-let pendingPhotoType = null;
+        .feed-item {
+            border-bottom: 1px solid var(--border-color);
+            padding: 2.5rem 0;
+            position: relative;
+        }
 
-/* ---------- elements ---------- */
-const composer = document.getElementById('composer');
-const tagInput = document.getElementById('tag-input');
-const saveBtn = document.getElementById('save-btn');
-const photoInput = document.getElementById('photo-input');
-const photoLabel = document.getElementById('photo-label');
-const photoPreview = document.getElementById('photo-preview');
-const photoPreviewImg = document.getElementById('photo-preview-img');
-const photoClear = document.getElementById('photo-clear');
-const resurfaceBtn = document.getElementById('resurface-btn');
-const resurfacedList = document.getElementById('resurfaced-list');
-const resurfacedEmpty = document.getElementById('resurfaced-empty');
-const archiveList = document.getElementById('archive-list');
-const archiveEmpty = document.getElementById('archive-empty');
-const exportBtn = document.getElementById('export-btn');
-const themeToggle = document.getElementById('theme-toggle');
-const themeLabel = document.getElementById('theme-toggle-label');
-const toast = document.getElementById('toast');
+        /* Special styling for resurfaced items to catch your eye */
+        .feed-item.resurfaced {
+            background-color: var(--resurface-highlight);
+            margin: 1rem -1.5rem;
+            padding: 2.5rem 1.5rem;
+            border-radius: 8px;
+            border-bottom: none;
+        }
 
-/* ---------- toast ---------- */
-let toastTimer = null;
-function showToast(msg) {
-  toast.textContent = msg;
-  toast.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
-}
+        .item-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+        }
 
-/* ---------- theme ---------- */
-function initTheme() {
-  const saved = localStorage.getItem('palimpsest-theme');
-  const theme = saved || 'dark';
-  applyTheme(theme);
-}
-function applyTheme(theme) {
-  if (theme === 'light') {
-    document.documentElement.setAttribute('data-theme', 'light');
-    themeLabel.textContent = 'light';
-  } else {
-    document.documentElement.removeAttribute('data-theme');
-    themeLabel.textContent = 'dark';
-  }
-  localStorage.setItem('palimpsest-theme', theme);
-}
-themeToggle.addEventListener('click', () => {
-  const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-  applyTheme(current === 'light' ? 'dark' : 'light');
-});
+        .item-tag {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
 
-/* ---------- photo handling ---------- */
-photoInput.addEventListener('change', async () => {
-  const file = photoInput.files[0];
-  if (!file) return;
-  const compressed = await compressImage(file, 1280, 0.72);
-  pendingPhotoBlob = compressed.blob;
-  pendingPhotoType = compressed.blob.type;
-  photoPreviewImg.src = URL.createObjectURL(compressed.blob);
-  photoPreview.hidden = false;
-  photoLabel.textContent = 'photo attached';
-});
+        .item-text {
+            font-family: var(--font-serif);
+            font-size: 1.2rem;
+            color: var(--text-main);
+            white-space: pre-wrap;
+            margin-bottom: 1rem;
+        }
 
-photoClear.addEventListener('click', () => {
-  pendingPhotoBlob = null;
-  pendingPhotoType = null;
-  photoInput.value = '';
-  photoPreview.hidden = true;
-  photoLabel.textContent = 'add photo';
-});
+        .item-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            filter: sepia(10%) contrast(95%); /* Softens digital harshness */
+        }
 
-function compressImage(file, maxDim, quality) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > maxDim || height > maxDim) {
-        if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
-        else { width = Math.round(width * maxDim / height); height = maxDim; }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-      URL.revokeObjectURL(url);
-      canvas.toBlob(blob => resolve({ blob, width, height }), 'image/jpeg', quality);
-    };
-    img.onerror = reject;
-    img.src = url;
-  });
-}
+        .item-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
 
-/* ---------- compose / save ---------- */
-saveBtn.addEventListener('click', async () => {
-  const text = composer.value.trim();
-  if (!text && !pendingPhotoBlob) {
-    showToast('Nothing to set down yet.');
-    return;
-  }
-  const tags = tagInput.value.split(',').map(t => t.trim()).filter(Boolean);
-  const now = Date.now();
-  const note = {
-    id: crypto.randomUUID(),
-    text,
-    tags,
-    photoBlob: pendingPhotoBlob,
-    photoType: pendingPhotoType,
-    createdAt: now,
-    lastRevisedAt: now,
-    revisions: 0,
-    lastResurfacedAt: null,
-    timesResurfaced: 0,
-  };
-  await dbPut(note);
-  notes.unshift(note);
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
 
-  composer.value = '';
-  tagInput.value = '';
-  pendingPhotoBlob = null;
-  pendingPhotoType = null;
-  photoInput.value = '';
-  photoPreview.hidden = true;
-  photoLabel.textContent = 'add photo';
+        .action-btn:hover {
+            color: var(--text-main);
+        }
 
-  showToast('Set down.');
-  renderArchive();
-});
+        /* Floating Action Button (FAB) */
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--text-main);
+            color: var(--bg-color);
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            z-index: 100;
+            transition: transform 0.2s;
+        }
 
-/* ---------- resurfacing ---------- */
-function eligibleForResurface(now) {
-  return notes
-    .filter(n => now - n.createdAt >= GRACE_MS)
-    .sort((a, b) => {
-      const aKey = a.lastResurfacedAt ?? 0;
-      const bKey = b.lastResurfacedAt ?? 0;
-      return aKey - bKey; // never-resurfaced (0) and longest-waiting first
-    });
-}
+        .fab:hover {
+            transform: scale(1.05);
+        }
 
-async function pullResurfaced({ silent } = {}) {
-  const now = Date.now();
-  const pool = eligibleForResurface(now);
-  const picked = pool.slice(0, 2);
+        /* Overlay / Drawer Writing Section */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: flex-end; /* Slides up from bottom on mobile */
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 200;
+        }
 
-  if (picked.length === 0) {
-    resurfacedIds = [];
-    renderResurfaced();
-    if (!silent) showToast('Nothing due back yet.');
-    return;
-  }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
 
-  for (const n of picked) {
-    n.lastResurfacedAt = now;
-    n.timesResurfaced += 1;
-    await dbPut(n);
-  }
-  resurfacedIds = picked.map(n => n.id);
-  renderResurfaced();
-  renderArchive();
-  if (!silent) showToast(picked.length === 1 ? 'One note returned.' : 'Two notes returned.');
-}
+        .modal-content {
+            background: var(--bg-color);
+            width: 100%;
+            max-width: 600px;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            padding: 2rem;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            box-shadow: 0 -8px 24px rgba(0,0,0,0.1);
+        }
 
-resurfaceBtn.addEventListener('click', () => pullResurfaced());
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
 
-/* ---------- rendering ---------- */
-function fmtDate(ts) {
-  const d = new Date(ts);
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
 
-function noteEl(note, { resurfaced } = {}) {
-  const el = document.createElement('article');
-  el.className = 'note' + (resurfaced ? ' is-resurfaced' : '');
-  el.dataset.id = note.id;
-  if (resurfaced) el.dataset.numeral = 'return ' + toRoman(note.timesResurfaced);
+        /* Input Controls styling */
+        .write-textarea {
+            width: 100%;
+            height: 150px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            padding: 1rem;
+            font-family: var(--font-serif);
+            font-size: 1.1rem;
+            resize: none;
+            outline: none;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
 
-  if (note.photoBlob) {
-    const img = document.createElement('img');
-    img.className = 'note-photo';
-    img.src = URL.createObjectURL(note.photoBlob);
-    img.alt = 'Attached photo';
-    el.appendChild(img);
-  }
+        .write-input-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
 
-  if (note.text) {
-    const p = document.createElement('p');
-    p.className = 'note-text';
-    p.textContent = note.text;
-    el.appendChild(p);
-  }
+        .write-input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            border-radius: 4px;
+            font-family: var(--font-sans);
+        }
 
-  if (note.tags && note.tags.length) {
-    const tagWrap = document.createElement('div');
-    tagWrap.className = 'note-tags';
-    note.tags.forEach(t => {
-      const span = document.createElement('span');
-      span.className = 'note-tag';
-      span.textContent = t;
-      tagWrap.appendChild(span);
-    });
-    el.appendChild(tagWrap);
-  }
+        .submit-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
 
-  const meta = document.createElement('div');
-  meta.className = 'note-meta';
-  const left = document.createElement('div');
-  left.className = 'meta-left';
-  const dateSpan = document.createElement('span');
-  dateSpan.textContent = fmtDate(note.createdAt);
-  left.appendChild(dateSpan);
-  if (note.revisions > 0) {
-    const revSpan = document.createElement('span');
-    revSpan.textContent = 'revised ' + toRoman(note.revisions) + 'x';
-    left.appendChild(revSpan);
-  }
-  meta.appendChild(left);
+    <header>
+        <h1>Palimpsest</h1>
+        <div class="header-actions">
+            <button id="resurface-trigger" title="Bring older entries back to light">Resurface Old Thoughts</button>
+        </div>
+    </header>
 
-  const actions = document.createElement('div');
-  actions.className = 'meta-actions';
-  const editBtn = iconButton('rewrite', () => openRewrite(el, note));
-  const delBtn = iconButton('delete', () => removeNote(note.id), true);
-  actions.appendChild(editBtn);
-  actions.appendChild(delBtn);
-  meta.appendChild(actions);
+    <main id="feed-container">
+        <!-- Sample Entry Structure for reference -->
+        <article class="feed-item resurfaced">
+            <div class="item-meta">
+                <span class="item-tag">#cinematography</span>
+                <span class="item-revision">Rev. III</span>
+            </div>
+            <p class="item-text">The way light cuts across a frame isn't just about visibility—it's architecture. Early black and white masters didn't shoot objects; they shot the contrast between density and absence.</p>
+            <div class="item-actions">
+                <button class="action-btn">Overwrite</button>
+            </div>
+        </article>
+        
+        <article class="feed-item">
+            <div class="item-meta">
+                <span class="item-tag">#prose-style</span>
+                <span class="item-revision">Original</span>
+            </div>
+            <p class="item-text">Keep the sentences close to the bone. If a phrase doesn't earn its keep, strike it through. Let the blank space do the heavy lifting.</p>
+            <div class="item-actions">
+                <button class="action-btn">Overwrite</button>
+            </div>
+        </article>
+    </main>
 
-  el.appendChild(meta);
-  return el;
-}
+    <!-- Floating Action Button -->
+    <button class="fab" id="open-writer-btn" aria-label="Compose new thought">+</button>
 
-function iconButton(label, onClick, danger) {
-  const btn = document.createElement('button');
-  btn.className = 'icon-btn' + (danger ? ' danger' : '');
-  btn.type = 'button';
-  btn.textContent = label === 'rewrite' ? '✎ rewrite' : '✕ remove';
-  btn.addEventListener('click', onClick);
-  return btn;
-}
+    <!-- Modal Drawer for Composing / Overwriting -->
+    <div class="modal-overlay" id="writer-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title" style="font-family: var(--font-serif);">Commit to Layer</h3>
+                <button class="action-btn" id="close-writer-btn">Cancel</button>
+            </div>
+            <form id="note-form">
+                <textarea class="write-textarea" id="note-text" placeholder="Write your reflection..."></textarea>
+                <div class="write-input-row">
+                    <input type="text" class="write-input" id="note-tag" placeholder="Topic tag (e.g., #anatomy)">
+                    <input type="file" id="note-photo" accept="image/*" style="display:none;">
+                    <button type="button" class="write-input" onclick="document.getElementById('note-photo').click()">Attach Image</button>
+                </div>
+                <button type="submit" class="submit-btn">Let it Settle</button>
+            </form>
+        </div>
+    </div>
 
-function openRewrite(el, note) {
-  if (el.querySelector('.rewrite-panel')) return; // already open
+    <script>
+        // DOM Elements for Modal Interactivity
+        const modal = document.getElementById('writer-modal');
+        const openBtn = document.getElementById('open-writer-btn');
+        const closeBtn = document.getElementById('close-writer-btn');
 
-  const panel = document.createElement('div');
-  panel.className = 'rewrite-panel';
+        openBtn.addEventListener('click', () => {
+            document.getElementById('modal-title').textContent = "New Layer";
+            modal.classList.add('active');
+        });
 
-  const ghost = document.createElement('p');
-  ghost.className = 'ghost-text';
-  ghost.textContent = note.text || '(no text — photo only)';
+        closeBtn.addEventListener('click', () => {
+            modal.classList.remove('active');
+        });
 
-  const textarea = document.createElement('textarea');
-  textarea.rows = 3;
-  textarea.value = note.text;
-
-  const actions = document.createElement('div');
-  actions.className = 'rewrite-actions';
-  const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'ghost-btn small';
-  cancelBtn.type = 'button';
-  cancelBtn.textContent = 'cancel';
-  cancelBtn.addEventListener('click', () => panel.remove());
-
-  const saveRewriteBtn = document.createElement('button');
-  saveRewriteBtn.className = 'ink-btn';
-  saveRewriteBtn.type = 'button';
-  saveRewriteBtn.textContent = 'Rewrite';
-  saveRewriteBtn.addEventListener('click', async () => {
-    const newText = textarea.value.trim();
-    note.text = newText;
-    note.revisions += 1;
-    note.lastRevisedAt = Date.now();
-    await dbPut(note);
-    showToast('Rewritten — ' + toRoman(note.revisions) + ' revision' + (note.revisions === 1 ? '' : 's') + ' now.');
-    renderResurfaced();
-    renderArchive();
-  });
-
-  actions.appendChild(cancelBtn);
-  actions.appendChild(saveRewriteBtn);
-  panel.appendChild(ghost);
-  panel.appendChild(textarea);
-  panel.appendChild(actions);
-  el.appendChild(panel);
-  textarea.focus();
-}
-
-async function removeNote(id) {
-  await dbDelete(id);
-  notes = notes.filter(n => n.id !== id);
-  resurfacedIds = resurfacedIds.filter(rid => rid !== id);
-  renderResurfaced();
-  renderArchive();
-  showToast('Removed.');
-}
-
-function renderResurfaced() {
-  resurfacedList.innerHTML = '';
-  const items = resurfacedIds.map(id => notes.find(n => n.id === id)).filter(Boolean);
-  if (items.length === 0) {
-    resurfacedEmpty.hidden = false;
-    return;
-  }
-  resurfacedEmpty.hidden = true;
-  items.forEach(n => resurfacedList.appendChild(noteEl(n, { resurfaced: true })));
-}
-
-function renderArchive() {
-  archiveList.innerHTML = '';
-  const sorted = [...notes].sort((a, b) => b.createdAt - a.createdAt);
-  if (sorted.length === 0) {
-    archiveEmpty.hidden = false;
-    return;
-  }
-  archiveEmpty.hidden = true;
-  sorted.forEach(n => archiveList.appendChild(noteEl(n)));
-}
-
-/* ---------- export ---------- */
-exportBtn.addEventListener('click', async () => {
-  const exportable = notes.map(n => ({
-    ...n,
-    photoBlob: undefined,
-    photoDataUrl: undefined, // filled below if present
-  }));
-
-  await Promise.all(notes.map(async (n, i) => {
-    if (n.photoBlob) {
-      exportable[i].photoDataUrl = await blobToDataUrl(n.photoBlob);
-    }
-    delete exportable[i].photoBlob;
-  }));
-
-  const blob = new Blob([JSON.stringify(exportable, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'palimpsest-export-' + new Date().toISOString().slice(0, 10) + '.json';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-  showToast('Exported.');
-});
-
-function blobToDataUrl(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-
-/* ---------- boot ---------- */
-async function boot() {
-  initTheme();
-  notes = await dbAll();
-  renderArchive();
-  await pullResurfaced({ silent: true });
-
-  if (resurfacedIds.length === 0) {
-    resurfacedEmpty.hidden = false;
-  }
-}
-
-boot();
-
-/* ---------- service worker ---------- */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {
-      /* offline install still works even if this particular registration attempt fails */
-    });
-  });
-}
+        // Close modal if user clicks outside the content panel
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.remove('active');
+        });
+    </script>
+</body>
+</html>
