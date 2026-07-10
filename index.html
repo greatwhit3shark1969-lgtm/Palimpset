@@ -11,6 +11,7 @@
             --border-color: #212f42;
             --accent: #3b82f6;
             --accent-hover: #2563eb;
+            --danger: #ef4444; /* Added danger color for deleting */
             --text-main: #f1f5f9;
             --text-muted: #94a3b8;
             --resurface-bg: rgba(59, 130, 246, 0.08);
@@ -117,7 +118,8 @@
             padding: 1.25rem; border-bottom: 1px solid var(--border-color);
             display: flex; flex-direction: column; gap: 0.6rem; position: relative;
         }
-        .post-meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); }
+        .post-card:hover { background-color: rgba(255, 255, 255, 0.01); }
+        .post-meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); padding-right: 50px; } /* Space for buttons */
         .username { font-weight: 700; color: var(--accent); }
         .post-text { font-size: 0.95rem; white-space: pre-wrap; color: var(--text-main); }
         .post-tag { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
@@ -125,12 +127,18 @@
         .post-image-container { border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-top: 0.4rem; max-height: 350px; }
         .post-image { width: 100%; height: auto; display: block; object-fit: cover; }
 
-        .edit-btn {
+        /* Action buttons in post header */
+        .post-actions {
             position: absolute; top: 1.25rem; right: 1.25rem;
-            background: none; border: none; cursor: pointer; color: var(--text-muted);
-            display: flex; align-items: center; justify-content: center; padding: 4px;
+            display: flex; gap: 0.25rem; align-items: center;
         }
-        .edit-btn:hover { color: var(--accent); }
+        .post-action-btn {
+            background: none; border: none; cursor: pointer; color: var(--text-muted);
+            display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px;
+        }
+        .post-action-btn:hover { background: rgba(255,255,255,0.05); }
+        .post-action-btn.edit:hover { color: var(--accent); }
+        .post-action-btn.delete:hover { color: var(--danger); }
 
         /* Separate Archive Grid Display */
         .archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; }
@@ -190,33 +198,40 @@
             <h1 id="brand-logo">Palimpsest</h1>
             
             <div class="search-wrapper">
+                <!-- Smooth Expanding Search Box -->
                 <input type="search" id="search-input" placeholder="Search archive...">
                 
+                <!-- Search Toggle Trigger Button (Updated to sleeker icon) -->
                 <button class="header-btn" id="search-toggle-btn" title="Toggle Search">
-                    <svg style="width:20px; height:20px; fill:currentColor;" viewBox="0 0 24 24"><path d="M21.71 20.29l-1.42 1.42a1 1 0 0 1-1.42 0l-3.8-3.8a8 8 0 1 1 1.42-1.42l3.8 3.8a1 1 0 0 1 0 1.42zM10 16a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"></path></svg>
+                    <svg style="width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </button>
 
+                <!-- Separate Archive Dashboard Toggle Button -->
                 <button class="header-btn" id="toggle-archive" title="Open Archive View">
-                    <svg style="width:20px; height:20px; fill:currentColor;" viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 2v1h16V6H4zm0 3v9h16V9H4zm2 2h12v1H6v-1zm0 2h8v1H6v-1zm0 2h12v1H6v-1z"></path></svg>
+                    <svg style="width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2;" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                 </button>
             </div>
         </header>
 
+        <!-- View 1: Main Chronological Feed + Generative Resurfacing Area -->
         <div id="main-feed-view" class="scrollable-view">
             <div id="generative-resurface-zone"></div>
             <div id="feed-container"></div>
         </div>
 
+        <!-- View 2: Separate Dedicated Archive Vault Layout -->
         <div id="archive-vault-view" class="scrollable-view">
             <h3 style="margin-bottom: 1.25rem; font-size: 1.05rem; color: var(--text-muted); font-weight: 700;">THE ARCHIVE VAULT</h3>
             <div class="archive-grid" id="archive-grid-container"></div>
         </div>
     </main>
 
+    <!-- Global Floating Action Button -->
     <button class="fab" id="toggle-writer" aria-label="Write new entry">
         <svg class="fab-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
     </button>
 
+    <!-- Composition Overlay Window Sheet -->
     <div class="modal-overlay" id="writer-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -227,6 +242,7 @@
                 <input type="hidden" id="entry-id">
                 <textarea class="post-textarea" id="post-text" placeholder="What reflection is solidifying?" required></textarea>
                 
+                <!-- Live Embedded Image Local Preview Frame -->
                 <div id="preview-container">
                     <img id="preview-img" src="" alt="Preview Window">
                 </div>
@@ -276,10 +292,17 @@
                 mainFeedView.style.display = 'none';
                 archiveVaultView.style.display = 'flex';
                 toggleArchiveBtn.classList.add('active');
+                if (searchInput.classList.contains('expanded')) {
+                    searchInput.classList.remove('expanded');
+                    searchInput.value = "";
+                    searchToggleBtn.classList.remove('active');
+                }
+                renderAllAppViews(); // Ensure archive is rendered correctly
             } else {
                 mainFeedView.style.display = 'flex';
                 archiveVaultView.style.display = 'none';
                 toggleArchiveBtn.classList.remove('active');
+                renderAllAppViews(); // Ensure feed is rendered correctly
             }
         }
 
@@ -301,6 +324,16 @@
                 searchInput.classList.add('expanded');
                 searchToggleBtn.classList.add('active');
                 searchInput.focus();
+            }
+        });
+
+        // Hide search input if clicking brand logo while archive view is active
+        brandLogo.addEventListener('click', () => {
+            if (archiveVaultView.style.display === 'flex') {
+                searchInput.classList.remove('expanded');
+                searchInput.value = "";
+                searchToggleBtn.classList.remove('active');
+                toggleNavigationViews('feed');
             }
         });
 
@@ -351,6 +384,11 @@
             const textVal = document.getElementById('post-text').value;
             const tagVal = document.getElementById('post-tag').value;
 
+            if (!textVal.trim()) {
+                alert("Please enter a reflection.");
+                return;
+            }
+
             const tx = db.transaction('entries', 'readwrite');
             const store = tx.objectStore('entries');
 
@@ -373,14 +411,18 @@
                 form.reset();
                 previewContainer.style.display = 'none';
                 currentEncodedImage = "";
-                renderAllAppViews();
+                renderAllAppViews(searchInput.value.toLowerCase()); // Re-render with current query
             };
         });
 
         // Comprehensive Render Pass
         function renderAllAppViews(searchQuery = "") {
-            feed.innerHTML = "";
-            archiveGrid.innerHTML = "";
+            const currentViewIsArchive = archiveVaultView.style.display === 'flex';
+            if (!currentViewIsArchive) {
+                feed.innerHTML = "";
+            } else {
+                archiveGrid.innerHTML = "";
+            }
             const databaseBuffer = [];
 
             const tx = db.transaction('entries', 'readonly');
@@ -393,9 +435,9 @@
                     cursor.continue();
                 } else {
                     // Execute Generative Loop processing 
-                    if (!searchQuery) {
+                    if (!searchQuery && !currentViewIsArchive) {
                         processGenerativeResurfacing(databaseBuffer);
-                    } else {
+                    } else if (!currentViewIsArchive) {
                         resurfaceZone.innerHTML = "";
                     }
 
@@ -405,32 +447,40 @@
                             return;
                         }
 
-                        // Render Active Feed Stream Cards
-                        const card = document.createElement('article');
-                        card.className = 'post-card';
-                        card.innerHTML = `
-                            <div class="post-meta">
-                                <span class="username">thought_stream</span>
-                                <span>${data.timestamp}</span>
-                            </div>
-                            <p class="post-text">${data.text}</p>
-                            ${data.tag ? `<span class="post-tag">${data.tag.startsWith('#') ? data.tag : '#' + data.tag}</span>` : ''}
-                            ${data.image ? `<div class="post-image-container"><img src="${data.image}" class="post-image" alt="Attached Document"></div>` : ''}
-                            <button class="edit-btn" onclick="openForOverwrite(${data.id})" title="Rewrite Layer">
-                                <svg style="width:16px; height:16px; fill:currentColor;" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-                            </button>
-                        `;
-                        feed.appendChild(card);
-
-                        // Render Separate Vault Archive Grid Thumbnails
-                        const thumb = document.createElement('div');
-                        thumb.className = 'archive-thumb';
-                        thumb.onclick = () => { toggleNavigationViews('feed'); openForOverwrite(data.id); };
-                        thumb.innerHTML = `
-                            <p class="thumb-text">${data.text}</p>
-                            <span class="thumb-tag">${data.tag ? (data.tag.startsWith('#') ? data.tag : '#' + data.tag) : '#UNTAGGED'}</span>
-                        `;
-                        archiveGrid.appendChild(thumb);
+                        if (!currentViewIsArchive) {
+                            // Render Active Feed Stream Cards
+                            const card = document.createElement('article');
+                            card.className = 'post-card';
+                            card.innerHTML = `
+                                <div class="post-meta">
+                                    <span class="username">thought_stream</span>
+                                    <span>${data.timestamp}</span>
+                                </div>
+                                <p class="post-text">${data.text}</p>
+                                ${data.tag ? `<span class="post-tag">${data.tag.startsWith('#') ? data.tag : '#' + data.tag}</span>` : ''}
+                                ${data.image ? `<div class="post-image-container"><img src="${data.image}" class="post-image" alt="Attached Document"></div>` : ''}
+                                <div class="post-actions">
+                                    <button class="post-action-btn edit" onclick="openForOverwrite(${data.id})" title="Rewrite Layer">
+                                        <svg style="width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                    </button>
+                                    <button class="post-action-btn delete" onclick="deleteEntry(${data.id})" title="Delete Layer">
+                                        <svg style="width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2;" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                    </button>
+                                </div>
+                            `;
+                            feed.appendChild(card);
+                        } else {
+                            // Render Separate Vault Archive Grid Thumbnails
+                            const thumb = document.createElement('div');
+                            thumb.className = 'archive-thumb';
+                            thumb.innerHTML = `
+                                <p class="thumb-text">${data.text}</p>
+                                <span class="thumb-tag">${data.tag ? (data.tag.startsWith('#') ? data.tag : '#' + data.tag) : '#UNTAGGED'}</span>
+                            `;
+                            // Define onclick later to pass correct data.id
+                            thumb.addEventListener('click', () => { toggleNavigationViews('feed'); openForOverwrite(data.id); });
+                            archiveGrid.appendChild(thumb);
+                        }
                     });
                 }
             };
@@ -449,26 +499,35 @@
             resurfacedBlock.className = 'resurfaced-container';
             resurfacedBlock.innerHTML = `
                 <span class="resurfaced-badge">Resurfaced Layer</span>
-                <div class="post-meta" style="margin-bottom:0.5rem;">
+                <div class="post-meta" style="margin-bottom:0.5rem; padding-right:0;">
                     <span class="username" style="color:var(--text-main);">historical_reflection</span>
                     <span>${data.timestamp}</span>
                 </div>
                 <p class="post-text" style="font-style: italic; color: rgba(255,255,255,0.9);">${data.text}</p>
                 ${data.tag ? `<span class="post-tag">${data.tag.startsWith('#') ? data.tag : '#' + data.tag}</span>` : ''}
                 ${data.image ? `<div class="post-image-container" style="max-height:160px; margin-top:0.4rem;"><img src="${data.image}" class="post-image" alt="Resurfaced Graphic"></div>` : ''}
-                <button class="edit-btn" style="top:1.25rem;" onclick="openForOverwrite(${data.id})" title="Rewrite Historical Data">
-                    <svg style="width:16px; height:16px; fill:var(--accent);" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-                </button>
+                <div class="post-actions" style="top:1.25rem;">
+                    <button class="post-action-btn edit" style="color:var(--accent);" onclick="openForOverwrite(${data.id})" title="Rewrite Historical Data">
+                        <svg style="width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button class="post-action-btn delete" onclick="deleteEntry(${data.id})" title="Delete Layer">
+                        <svg style="width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2;" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
+                </div>
             `;
             resurfaceZone.appendChild(resurfacedBlock);
         }
 
         // Connect Pencil Icon directly to database instances
         window.openForOverwrite = function(id) {
+            if (archiveVaultView.style.display === 'flex') {
+                toggleNavigationViews('feed');
+            }
             const tx = db.transaction('entries', 'readonly');
             const store = tx.objectStore('entries');
             store.get(id).onsuccess = (e) => {
                 const data = e.target.result;
+                if (!data) return;
                 document.getElementById('entry-id').value = data.id;
                 document.getElementById('post-text').value = data.text;
                 document.getElementById('post-tag').value = data.tag;
@@ -483,7 +542,20 @@
                     previewContainer.style.display = 'none';
                 }
                 modal.classList.add('active');
+                document.getElementById('main-feed-view').scrollTo(0,0);
             };
+        };
+
+        // --- DELETING OPTION ---
+        window.deleteEntry = function(id) {
+            if (confirm("Are you sure you want to delete this reflection? This action cannot be undone.")) {
+                const tx = db.transaction('entries', 'readwrite');
+                const store = tx.objectStore('entries');
+                store.delete(id);
+                tx.oncomplete = () => {
+                    renderAllAppViews(searchInput.value.toLowerCase()); // Re-render with current query
+                };
+            }
         };
 
         // Hook Input listener directly to live execution
